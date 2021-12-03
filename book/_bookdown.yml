@@ -1,0 +1,5 @@
+book_filename: "colins-bookdown-hacked"
+delete_merged_file: true
+language:
+  ui:
+    chapter_name: ""

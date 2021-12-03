@@ -1,0 +1,146 @@
+# Introduction 
+
+Advent of Code is an Advent calendar of small programming puzzles for a variety of skill sets and skill levels that can be solved in any programming language you like. People use them as a speed contest, interview prep, company training, university coursework, practice problems, or to challenge each other.
+
+
+https://adventofcode.com/2021/about
+
+Authored by: [Eric Wastl](https://twitter.com/ericwastl)
+
+
+
+```{r, include=FALSE}
+### Document settings
+knitr::opts_chunk$set(echo = TRUE,
+                      # results = 'hold',
+                      message = FALSE,
+                      warning = FALSE,  out.width="100%", fig.align='center' )
+
+### Table formatting
+### Table outputs need to be declared when using kableExtra::kable_styling()
+
+    tformat <- "markdown" ## Unless it is latex or html ....
+    if (knitr::is_latex_output()) {tformat <- "latex"}
+    if (knitr::is_html_output())  {tformat <- "html"}
+
+
+```
+
+
+```{r}
+library(tidyverse)
+library(knitr)       ## for tables 
+library(kableExtra)  ## for table formatting
+library(flextable)
+
+library(dplyr)
+```
+
+
+
+# Day 1  -- Sonar Sweep
+
+--- Day 1: Sonar Sweep ---
+
+> You're minding your own business on a ship at sea when the overboard alarm goes off! You rush to see if you can help. Apparently, one of the Elves tripped and accidentally sent the sleigh keys flying into the ocean!
+
+> Before you know it, you're inside a submarine the Elves keep ready for situations like this. It's covered in Christmas lights (because of course it is), and it even has an experimental antenna that should be able to track the keys if you can boost its signal strength high enough; there's a little meter that indicates the antenna's signal strength by displaying 0-50 stars.
+
+>  Your instincts tell you that in order to save Christmas, you'll need to get all fifty stars by December 25th.
+
+> Collect stars by solving puzzles. Two puzzles will be made available on each day in the Advent calendar; the second puzzle is unlocked when you complete the first. Each puzzle grants one star. Good luck!
+
+> As the submarine drops below the surface of the ocean, it automatically performs a sonar sweep of the nearby sea floor. On a small screen, the sonar sweep report (your puzzle input) appears: each line is a measurement of the sea floor depth as the sweep looks further and further away from the submarine.
+
+## Part 1 -- how many signals are deeper? 
+
+The results of the sonar sweep.  Saved a copy of this, imported, processed, and answered.
+
+```{r}
+
+dat <- as.data.frame(read.table("./data/D01_input"))  ## import 
+dat$step <- c(dat$V1[2:length(dat$V1)], NA)           ## new var stepping ahead
+dat$test <- ifelse(dat$V1 <= dat$step, TRUE, FALSE)   ## compare 
+length(dat$test[dat$test == TRUE]) -1                 ## -1 
+
+
+```
+
+
+Learning from those that figured it out
+from https://twitter.com/drob
+
+```{r}
+## learning from those that figured it out 
+## Part 1
+dat <- read.table("data/D01_input")
+x <- dat$V1
+sum(x > lag(x), na.rm = TRUE)
+
+## Part 2 ??? this does not seem to be right ...
+## this answer did give the correct results but this may be by chance 
+## as it does not actually window the results -- my answer is below. 
+# sum(dat<lead(dat,3,0))
+
+```
+
+
+## Part 2 
+
+This time we are looking for a moving average or more specifically a moving window of 3 to average.  
+
+```
+## example of the moving window -- letters indicate the window
+199  A      
+200  A B    
+208  A B C  
+210    B C D
+200  E   C D
+207  E F   D
+240  E F G  
+269    F G H
+260      G H
+263        H
+
+```
+
+Did a little searching.  The `zoo` package provides `rollapply` to provide moving window analysis 
+
+
+I got the right answer on the test data 
+```{r}
+# install.packages("zoo")
+library(zoo)
+
+ex <- c(199,200,208,210,200,207,240,269,260,263) 
+ex.w <- rollapply(ex, 
+                   width = 3,
+                   align = "right",
+                   FUN = sum, 
+                   fill = NA,
+                   by = 1)
+
+ex.w
+ex <- data.frame(raw = ex, 
+                window = ex.w)
+sum(ex$window > lag(ex$window), na.rm = TRUE)
+
+```
+
+
+And now the right answer to part 2
+
+```{r}
+dat.w <- NA
+dat.w <- rollapply(dat$V1, 
+                   width = 3,
+                   align = "right",
+                   FUN = sum, 
+                   fill = NA,
+                   by = 1)
+
+sum(dat.w > lag(dat.w), na.rm = TRUE) 
+
+```
+
+
